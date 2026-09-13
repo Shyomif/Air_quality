@@ -2,11 +2,29 @@ import ee
 import geemap
 import solara
 
-# 1. تهيئة محرك GEE
+import os
+import json
+import ee
+
+# 1. تهيئة محرك GEE (دعم التشغيل المحلي والسحابي عبر Service Account)
 try:
-    ee.Initialize(project="disco-aegis-447417-m6")
-except Exception:
-    ee.Initialize()
+    cred_json = os.environ.get("GEE_CREDENTIALS")
+    if cred_json:
+        # إذا كنا على Render (يقرأ المفتاح من متغيرات البيئة)
+        cred_dict = json.loads(cred_json)
+        with open("temp_credentials.json", "w") as f:
+            json.dump(cred_dict, f)
+        
+        credentials = ee.ServiceAccountCredentials(cred_dict["client_email"], "temp_credentials.json")
+        ee.Initialize(credentials)
+    else:
+        # التشغيل المحلي على جهازك
+        try:
+            ee.Initialize(project="disco-aegis-447417-m6")
+        except Exception:
+            ee.Initialize()
+except Exception as e:
+    print(f"GEE Initialization Error: {e}")
 
 # 2. تحديد منطقة الدراسة (محافظة اللاذقية)
 syria_govs = ee.FeatureCollection("FAO/GAUL/2015/level1")

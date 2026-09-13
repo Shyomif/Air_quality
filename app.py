@@ -4,13 +4,46 @@ import ee
 import geemap
 import solara
 
-# 1. تهيئة GEE مع معالجة حصرية لتنسيق المفتاح ليتوافق مع بايثون الحديثة
+# 1. تكوين المفتاح السري بطريقة قائمة الأسطر لتجنب أخطاء تكسير الحروف (Invalid private key)
 try:
+    private_key_lines = [
+        "-----BEGIN PRIVATE KEY-----",
+        "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDT4VkNNjjGYFL+",
+        "iQvrKg20CkK4EBAE5SUFD5aJY8dlcoqajr+WapnBRPp+M9WaleOgZIH24KKfqI4b",
+        "AenpXcM7OwKDxAxqVylvzegvmZZAv8/mTsgc+v+ZYNKx6m2VzhOBxA4QxHlS/lCO",
+        "f1bI6DzefYPE+OMWxZW0HNi+0CQKQjHCGBZelengX2951Yfq67j9q6uEJGrnlJp7",
+        "NwmkqbTVJSGsqiXvVSLxCR0OSqeJ/5eZPC0g5r+Gs3pSYDl/ckHQfaSU4AiwHVVT",
+        "IKOVw7LraI4l/O6sYNRnmkZH5ktX13MhsYGZYWVlJyfO9C7JjlyZ/vblpYF5hLqJ",
+        "yPVHmvvVAgMBAAECggEABlk33YZ6Da+bLQHsN9VLEybvjYD7CeUtG8lgyFMTXr3K",
+        "MLawP5CIH4YH6g9231U4ZyORJVWLvzRCCxseksh6w2Pm6mMjFW3xJubI2zbt4pjH",
+        "YO42tBpCiFT3Wy9cAzi+gDfgoq37DfqNbVzxZmmsUTpPisUDq44As08zS1xZ3W4a",
+        "V71My6tMsG2OudOqKdYFVslneEwbLAT4m17BWwBqN2iXNFxyZiIe3wMCbn7tGtF5",
+        "yyEb6eC/J1Kau8kYGUGgHQVvE7bxc54QrUTw2W0VbMXEibmw54LdS/enob/Vo0ud",
+        "/P8j/wN2KrroFnNq4ZPEp/4tIeTpCeU+JeYS8XhQIQKBgQD1b7djCkYjiKHx2N7I",
+        "TjRi9E8ViHuE5mX9uZ3KOgvuDfHsvvEgPRf0rWWAUIXceFqLQU1tlUv6mlaUp3Du",
+        "daFjdY/z7iyxiWjzohMNr983ncKM32ZA4EO9R4lT7xIr1h1xQdeNuxdFXqcE4jfX",
+        "iFoqWg7c/Rfyid7vJ9lAzjgAPQKBgQDc/+axYLpIT+LMqzZIWMUs/uD2lNq5k3rt",
+        "MUbvJCkRgJDGVs03mFu609eSShXY9vlRGV5Wg3qmqzXSoGW55IXm6yzGiKBUFGK7",
+        "jwiHd1lPpg55+dvSiOrLDjZIxaAZXMyRztfeHsMgenmvak0uJVnMgbV2atQu7GUr",
+        "ZvLEe2VLeQKBgBIrtzQJ6q9uyi6Rk8zYnWBGHiTF+f8Y36wtNdVm/sMdHTAd4tQ0",
+        "MbXXsJATZhWwg2OT7huS1hEzo/1VeDLvWod2iLXSiFSMi8ydzzNQNgJ0F5c+Yt+i",
+        "uuEkjrI8HOhJ7dwYt9CybUKhg1QFO4Ulfydri3Yo9sDqHCswlBEMM3ExAoGASysT",
+        "OVPQKJZbawf1H6hp8IME23oH50T9c73mBaMEAPr8wyl1Barh0GsLkKt4QOLILEh3",
+        "qO9xgU0MsoZx80eCL+ffw+tmtRJ1/puI6CK1Ev1FQUG1/icpzUUZO6lUaiwBPLrg",
+        "+6D095AQ4ZRDiiWUJJYdtZhicU9gneGXQzNBYekCgYEAzUMvXnwop0fcWDtFuJih",
+        "eLm9y1UjAI+l9xs4Dxb3xkxI0pERf2GTl1cckM/Lax4ggjbCuxXHjCMWUNH9/PQH",
+        "s67U+JC1nfj5yvfNk9PJTkWEwtQJclVQrLjsw0ZV+SsBlfyFL0gzJfPJ74lsyRDa",
+        "5mXgiYTlGcQ7yEE+kGt7s80=",
+        "-----END PRIVATE KEY-----"
+    ]
+    
+    formatted_private_key = "\n".join(private_key_lines)
+
     cred_dict = {
       "type": "service_account",
       "project_id": "disco-aegis-447417-m6",
       "private_key_id": "91f28fb1de11a1acab13298d8132731c7505dfa6",
-      "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDT4VkNNjjGYFL+\niQvrKg20CkK4EBAE5SUFD5aJY8dlcoqajr+WapnBRPp+M9WaleOgZIH24KKfqI4b\nAenpXcM7OwKDxAxqVylvzegvmZZAv8/mTsgc+v+ZYNKx6m2VzhOBxA4QxHlS/lCO\nf1bI6DzefYPE+OMWxZW0HNi+0CQKQjHCGBZelengX2951Yfq67j9q6uEJGrnlJp7\nNwmkqbTVJSGsqiXvVSLxCR0OSqeJ/5eZPC0g5r+Gs3pSYDl/ckHQfaSU4AiwHVVT\nIKOVw7LraI4l/O6sYNRnmkZH5ktX13MhsYGZYWVlJyfO9C7JjlyZ/vblpYF5hLqJ\nyPVHmvvVAgMBAAECggEABlk33YZ6Da+bLQHsN9VLEybvjYD7CeUtG8lgyFMTXr3K\nMlawP5CIH4YH6g9231U4ZyORJVWLvzRCCxseksh6w2Pm6mMjFW3xJubI2zbt4pjH\nYO42tBpCiFT3Wy9cAzi+gDfgoq37DfqNbVzxZmmsUTpPisUDq44As08zS1xZ3W4a\nV71My6tMsG2OudOqKdYFVslneEwbLAT4m17BWwBqN2iXNFxyZiIe3wMCbn7tGtF5\nyyEb6eC/J1Kau8kYGUGgHQVvE7bxc54QrUTw2W0VbMXEibmw54LdS/enob/Vo0ud\n/P8j/wN2KrroFnNq4ZPEp/4tIeTpCeU+JeYS8XhQIQKBgQD1b7djCkYjiKHx2N7I\nTjRi9E8ViHuE5mX9uZ3KOgvuDfHsvvEgPRf0rWWAUIXceFqLQU1tlUv6mlaUp3Du\ndaFjdY/z7iyxiWjzohMNr983ncKM32ZA4EO9R4lT7xIr1h1xQdeNuxdFXqcE4jfX\niFoqWg7c/Rfyid7vJ9lAzjgAPQKBgQDc/+axYLpIT+LMqzZIWMUs/uD2lNq5k3rt\nMUbvJCkRgJDGVs03mFu609eSShXY9vlRGV5Wg3qmqzXSoGW55IXm6yzGiKBUFGK7\njwiHd1lPpg55+dvSiOrLDjZIxaAZXMyRztfeHsMgenmvak0uJVnMgbV2atQu7GUr\nZvLEe2VLeQKBgBIrtzQJ6q9uyi6Rk8zYnWBGHiTF+f8Y36wtNdVm/sMdHTAd4tQ0\nMbXXsJATZhWwg2OT7huS1hEzo/1VeDLvWod2iLXSiFSMi8ydzzNQNgJ0F5c+Yt+i\nuuEkjrI8HOhJ7dwYt9CybUKhg1QFO4Ulfydri3Yo9sDqHCswlBEMM3ExAoGASysT\nOVPQKJZbawf1H6hp8IME23oH50T9c73mBaMEAPr8wyl1Barh0GsLkKt4QOLILEh3\nqO9xgU0MsoZx80eCL+ffw+tmtRJ1/puI6CK1Ev1FQUG1/icpzUUZO6lUaiwBPLrg\n+6D095AQ4ZRDiiWUJJYdtZhicU9gneGXQzNBYekCgYEAzUMvXnwop0fcWDtFuJih\neLm9y1UjAI+l9xs4Dxb3xkxI0pERf2GTl1cckM/Lax4ggjbCuxXHjCMWUNH9/PQH\ns67U+JC1nfj5yvfNk9PJTkWEwtQJclVQrLjsw0ZV+SsBlfyFL0gzJfPJ74lsyRDa\n5mXgiYTlGcQ7yEE+kGt7s80=\n-----END PRIVATE KEY-----\n",
+      "private_key": formatted_private_key,
       "client_email": "air-459@disco-aegis-447417-m6.iam.gserviceaccount.com",
       "client_id": "106450112114837993756",
       "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -20,21 +53,14 @@ try:
       "universe_domain": "googleapis.com"
     }
 
-    # تصحيح فواصل الأسطر بدقة فائقة لمنع خطأ التوقيع
-    raw_key = cred_dict["private_key"]
-    if "\\n" in raw_key:
-        raw_key = raw_key.replace("\\n", "\n")
-    cred_dict["private_key"] = raw_key
-
-    # كتابة ملف الاعتماد المؤقت
+    # كتابة ملف الاعتماد المؤقت للسيرفر
     key_path = "temp_credentials.json"
     with open(key_path, "w", encoding="utf-8") as f:
         json.dump(cred_dict, f)
 
-    # استخدام طريقة التهيئة المباشرة عبر بيانات الاعتماد
     credentials = ee.ServiceAccountCredentials(cred_dict["client_email"], key_path)
     ee.Initialize(credentials=credentials, project=cred_dict["project_id"])
-    print("Google Earth Engine initialized successfully via Service Account!")
+    print("Google Earth Engine initialized successfully!")
 
 except Exception as e:
     print(f"GEE Initialization Error: {e}")

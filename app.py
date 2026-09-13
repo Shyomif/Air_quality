@@ -6,19 +6,22 @@ import os
 import json
 import ee
 
-# 1. تهيئة محرك GEE مع دعم حساب الخدمة والمشروع صراحة
+# 1. تهيئة محرك GEE مع معالجة صحيحة لمفاتيح الأسطر الخاصة بحساب الخدمة
 try:
     cred_json = os.environ.get("GEE_CREDENTIALS")
     if cred_json:
         cred_dict = json.loads(cred_json)
+        
+        # حل مشكلة تشفير المفتاح وتصحيح الأسطر الجديدة (Newlines)
+        if "private_key" in cred_dict:
+            cred_dict["private_key"] = cred_dict["private_key"].replace("\\n", "\n")
+            
         with open("temp_credentials.json", "w") as f:
             json.dump(cred_dict, f)
         
-        # استخراج اسم المشروع تلقائياً من ملف الـ JSON
         project_id = cred_dict.get("project_id", "disco-aegis-447417-m6")
         
         credentials = ee.ServiceAccountCredentials(cred_dict["client_email"], "temp_credentials.json")
-        # تمرير بيانات الاعتماد ومعرف المشروع معاً لتجنب خطأ عدم التهيئة
         ee.Initialize(credentials=credentials, project=project_id)
     else:
         # التشغيل المحلي على جهازك

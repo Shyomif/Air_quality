@@ -1,19 +1,16 @@
+import os
+import json
 import ee
 import geemap
 import solara
 
-import os
-import json
-import ee
-
-# 1. تهيئة GEE عبر قاموس بيانات معتمد ومباشر لتجنب أخطاء JWT Signature
+# 1. تهيئة GEE مع معالجة حصرية لتنسيق المفتاح ليتوافق مع بايثون الحديثة
 try:
-    # نقوم بتعريف بيانات حساب الخدمة مباشرة كقاموس بايثون لمنع مشاكل الـ Environment Variables
     cred_dict = {
       "type": "service_account",
       "project_id": "disco-aegis-447417-m6",
       "private_key_id": "91f28fb1de11a1acab13298d8132731c7505dfa6",
-      "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDT4VkNNjjGYFL+\niQvrKg20CkK4EBAE5SUFD5aJY8dlcoqajr+WapnBRPp+M9WaleOgZIH24KKfqI4b\nAenpXcM7OwKDxAxqVylvzegvmZZAv8/mTsgc+v+ZYNKx6m2VzhOBxA4QxHlS/lCO\nf1bI6DzefYPE+OMWxZW0HNi+0CQKQjHCGBZelengX2951Yfq67j9q6uEJGrnlJp7\nNwmkqbTVJSGsqiXvVSLxCR0OSqeJ/5eZPC0g5r+Gs3pSYDl/ckHQfaSU4AiwHVVT\nIKOVw7LraI4l/O6sYNRnmkZH5ktX13MhsYGZYWVlJyfO9C7JjlyZ/vblpYF5hLqJ\nyPVHmvvVAgMBAAECggEABlk33YZ6Da+bLQHsN9VLEybvjYD7CeUtG8lgyFMTXr3K\nMLawP5CIH4YH6g9231U4ZyORJVWLvzRCCxseksh6w2Pm6mMjFW3xJubI2zbt4pjH\nYO42tBpCiFT3Wy9cAzi+gDfgoq37DfqNbVzxZmmsUTpPisUDq44As08zS1xZ3W4a\nV71My6tMsG2OudOqKdYFVslneEwbLAT4m17BWwBqN2iXNFxyZiIe3wMCbn7tGtF5\nyyEb6eC/J1Kau8kYGUGgHQVvE7bxc54QrUTw2W0VbMXEibmw54LdS/enob/Vo0ud\n/P8j/wN2KrroFnNq4ZPEp/4tIeTpCeU+JeYS8XhQIQKBgQD1b7djCkYjiKHx2N7I\nTjRi9E8ViHuE5mX9uZ3KOgvuDfHsvvEgPRf0rWWAUIXceFqLQU1tlUv6mlaUp3Du\ndaFjdY/z7iyxiWjzohMNr983ncKM32ZA4EO9R4lT7xIr1h1xQdeNuxdFXqcE4jfX\niFoqWg7c/Rfyid7vJ9lAzjgAPQKBgQDc/+axYLpIT+LMqzZIWMUs/uD2lNq5k3rt\nMUbvJCkRgJDGVs03mFu609eSShXY9vlRGV5Wg3qmqzXSoGW55IXm6yzGiKBUFGK7\njwiHd1lPpg55+dvSiOrLDjZIxaAZXMyRztfeHsMgenmvak0uJVnMgbV2atQu7GUr\nZvLEe2VLeQKBgBIrtzQJ6q9uyi6Rk8zYnWBGHiTF+f8Y36wtNdVm/sMdHTAd4tQ0\nMbXXsJATZhWwg2OT7huS1hEzo/1VeDLvWod2iLXSiFSMi8ydzzNQNgJ0F5c+Yt+i\nuuEkjrI8HOhJ7dwYt9CybUKhg1QFO4Ulfydri3Yo9sDqHCswlBEMM3ExAoGASysT\nOVPQKJZbawf1H6hp8IME23oH50T9c73mBaMEAPr8wyl1Barh0GsLkKt4QOLILEh3\nqO9xgU0MsoZx80eCL+ffw+tmtRJ1/puI6CK1Ev1FQUG1/icpzUUZO6lUaiwBPLrg\n+6D095AQ4ZRDiiWUJJYdtZhicU9gneGXQzNBYekCgYEAzUMvXnwop0fcWDtFuJih\neLm9y1UjAI+l9xs4Dxb3xkxI0pERf2GTl1cckM/Lax4ggjbCuxXHjCMWUNH9/PQH\ns67U+JC1nfj5yvfNk9PJTkWEwtQJclVQrLjsw0ZV+SsBlfyFL0gzJfPJ74lsyRDa\n5mXgiYTlGcQ7yEE+kGt7s80=\n-----END PRIVATE KEY-----\n",
+      "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDT4VkNNjjGYFL+\niQvrKg20CkK4EBAE5SUFD5aJY8dlcoqajr+WapnBRPp+M9WaleOgZIH24KKfqI4b\nAenpXcM7OwKDxAxqVylvzegvmZZAv8/mTsgc+v+ZYNKx6m2VzhOBxA4QxHlS/lCO\nf1bI6DzefYPE+OMWxZW0HNi+0CQKQjHCGBZelengX2951Yfq67j9q6uEJGrnlJp7\nNwmkqbTVJSGsqiXvVSLxCR0OSqeJ/5eZPC0g5r+Gs3pSYDl/ckHQfaSU4AiwHVVT\nIKOVw7LraI4l/O6sYNRnmkZH5ktX13MhsYGZYWVlJyfO9C7JjlyZ/vblpYF5hLqJ\nyPVHmvvVAgMBAAECggEABlk33YZ6Da+bLQHsN9VLEybvjYD7CeUtG8lgyFMTXr3K\nMlawP5CIH4YH6g9231U4ZyORJVWLvzRCCxseksh6w2Pm6mMjFW3xJubI2zbt4pjH\nYO42tBpCiFT3Wy9cAzi+gDfgoq37DfqNbVzxZmmsUTpPisUDq44As08zS1xZ3W4a\nV71My6tMsG2OudOqKdYFVslneEwbLAT4m17BWwBqN2iXNFxyZiIe3wMCbn7tGtF5\nyyEb6eC/J1Kau8kYGUGgHQVvE7bxc54QrUTw2W0VbMXEibmw54LdS/enob/Vo0ud\n/P8j/wN2KrroFnNq4ZPEp/4tIeTpCeU+JeYS8XhQIQKBgQD1b7djCkYjiKHx2N7I\nTjRi9E8ViHuE5mX9uZ3KOgvuDfHsvvEgPRf0rWWAUIXceFqLQU1tlUv6mlaUp3Du\ndaFjdY/z7iyxiWjzohMNr983ncKM32ZA4EO9R4lT7xIr1h1xQdeNuxdFXqcE4jfX\niFoqWg7c/Rfyid7vJ9lAzjgAPQKBgQDc/+axYLpIT+LMqzZIWMUs/uD2lNq5k3rt\nMUbvJCkRgJDGVs03mFu609eSShXY9vlRGV5Wg3qmqzXSoGW55IXm6yzGiKBUFGK7\njwiHd1lPpg55+dvSiOrLDjZIxaAZXMyRztfeHsMgenmvak0uJVnMgbV2atQu7GUr\nZvLEe2VLeQKBgBIrtzQJ6q9uyi6Rk8zYnWBGHiTF+f8Y36wtNdVm/sMdHTAd4tQ0\nMbXXsJATZhWwg2OT7huS1hEzo/1VeDLvWod2iLXSiFSMi8ydzzNQNgJ0F5c+Yt+i\nuuEkjrI8HOhJ7dwYt9CybUKhg1QFO4Ulfydri3Yo9sDqHCswlBEMM3ExAoGASysT\nOVPQKJZbawf1H6hp8IME23oH50T9c73mBaMEAPr8wyl1Barh0GsLkKt4QOLILEh3\nqO9xgU0MsoZx80eCL+ffw+tmtRJ1/puI6CK1Ev1FQUG1/icpzUUZO6lUaiwBPLrg\n+6D095AQ4ZRDiiWUJJYdtZhicU9gneGXQzNBYekCgYEAzUMvXnwop0fcWDtFuJih\neLm9y1UjAI+l9xs4Dxb3xkxI0pERf2GTl1cckM/Lax4ggjbCuxXHjCMWUNH9/PQH\ns67U+JC1nfj5yvfNk9PJTkWEwtQJclVQrLjsw0ZV+SsBlfyFL0gzJfPJ74lsyRDa\n5mXgiYTlGcQ7yEE+kGt7s80=\n-----END PRIVATE KEY-----\n",
       "client_email": "air-459@disco-aegis-447417-m6.iam.gserviceaccount.com",
       "client_id": "106450112114837993756",
       "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -23,12 +20,21 @@ try:
       "universe_domain": "googleapis.com"
     }
 
-    with open("temp_credentials.json", "w") as f:
+    # تصحيح فواصل الأسطر بدقة فائقة لمنع خطأ التوقيع
+    raw_key = cred_dict["private_key"]
+    if "\\n" in raw_key:
+        raw_key = raw_key.replace("\\n", "\n")
+    cred_dict["private_key"] = raw_key
+
+    # كتابة ملف الاعتماد المؤقت
+    key_path = "temp_credentials.json"
+    with open(key_path, "w", encoding="utf-8") as f:
         json.dump(cred_dict, f)
-    
-    credentials = ee.ServiceAccountCredentials(cred_dict["client_email"], "temp_credentials.json")
+
+    # استخدام طريقة التهيئة المباشرة عبر بيانات الاعتماد
+    credentials = ee.ServiceAccountCredentials(cred_dict["client_email"], key_path)
     ee.Initialize(credentials=credentials, project=cred_dict["project_id"])
-    print("GEE Initialized successfully using Service Account dictionary!")
+    print("Google Earth Engine initialized successfully via Service Account!")
 
 except Exception as e:
     print(f"GEE Initialization Error: {e}")

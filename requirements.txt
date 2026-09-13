@@ -1,0 +1,4 @@
+solara
+geemap
+earthengine-api
+uvicorn
